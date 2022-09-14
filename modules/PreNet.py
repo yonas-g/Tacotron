@@ -4,7 +4,7 @@ from Hyperparameters import Hyperparameters as hp
 class PreNet(nn.Module):
     '''
     inputs: [N, T, in]
-    outputs: [N, T, E // 2]
+    outputs:[N, T, E // 2]
     '''
 
     def __init__(self, in_features):

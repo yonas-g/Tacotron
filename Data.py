@@ -22,17 +22,19 @@ class TacotronDataset(Dataset):
         return len(self.fpaths)
 
     def __getitem__(self, idx):
-        _, mel, _ = load_spectrograms(self.fpaths[idx])
+        _, mel, mag = load_spectrograms(self.fpaths[idx])
         mel = torch.from_numpy(mel)
+        mag = torch.from_numpy(mag)
         GO_mel = torch.zeros(1, mel.size(1))  # GO frame
         mel = torch.cat([GO_mel, mel], dim=0)
         text = self.texts[idx]
-        return text, mel
+        return {'text': text, 'mel': mel, 'mag': mag}
     
     @staticmethod
     def collate_fn(batch):
-        batch_text = [x for x, _ in batch]
-        batch_mel = [y for _, y in batch]
+        batch_text = [b["text"] for b in batch]
+        batch_mel = [b["mel"] for b in batch]
+        batch_mag = [b["mag"] for b in batch]
 
         batch_text_pad = pad_sequence(batch_text, batch_first=True)
         lens_text = [len(text) for text in batch_text]
@@ -40,7 +42,19 @@ class TacotronDataset(Dataset):
         batch_mel_pad = pad_sequence(batch_mel, batch_first=True)
         lens_mel = [len(mel) for mel in batch_mel]
 
-        return batch_text_pad, batch_mel_pad, torch.tensor(lens_text).type(torch.int), torch.tensor(lens_mel).type(torch.int)
+        batch_mag_pad = pad_sequence(batch_mag, batch_first=True)
+        lens_mag = [len(mag) for mag in batch_mag]
+
+        batch = {
+            "text": batch_text_pad,
+            "mel": batch_mel_pad,
+            "mag": batch_mag_pad,
+            "len_text": torch.tensor(lens_text).type(torch.int),
+            "len_mel": torch.tensor(lens_mel).type(torch.int),
+            "len_mag": torch.tensor(lens_mag).type(torch.int)
+        }
+
+        return batch
         
 
 
@@ -76,8 +90,7 @@ if __name__ == '__main__':
     loader = DataLoader(dataset=dataset, batch_size=8, collate_fn=TacotronDataset.collate_fn)
 
     for batch in loader:
-        text, mel, text_len, mel_len = batch
-        print(text[0])
-        print(mel.size())
-        print(text_len, mel_len)
+        print(batch["text"][0])
+        print(batch['mel'].size())
+        print(batch['mag'].size())
         break
