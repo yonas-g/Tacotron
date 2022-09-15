@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from modules.Conv1d import Conv1d
-from modules.BatchNorm1d import BatchNorm1d
+from Conv1d import Conv1d
+from BatchNorm1d import BatchNorm1d
 
 class Conv1dBank(nn.Module):
     '''
@@ -22,7 +22,7 @@ class Conv1dBank(nn.Module):
             kernel_size=k+1
         ) for k in range(K)]
 
-        self.banks = nn.ModuleList(banks)
+        self.bank = nn.ModuleList(banks)
         self.bn = BatchNorm1d(out_channels * K)
 
     def forward(self, inputs):
@@ -37,3 +37,12 @@ class Conv1dBank(nn.Module):
         outputs = F.relu(outputs)
 
         return outputs
+
+if __name__ == "__main__":
+    
+    from Hyperparameters import Hyperparameters as hp
+
+    model = Conv1dBank(hp.K, hp.E // 2, hp.E // 2)
+    inputs = torch.autograd.Variable(torch.randn(10, 22, hp.E // 2)) # [10, 22, 2048]
+    out = model(inputs)
+    print(out.shape)

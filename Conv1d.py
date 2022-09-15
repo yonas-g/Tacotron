@@ -25,3 +25,9 @@ class Conv1d(nn.Module):
         out = self.conv1d(inputs)  # [N, C_out, T]
         out = torch.transpose(out, 1, 2)  # [N, T, C_out]
         return out
+
+if __name__ == "__main__":
+    model = Conv1d(256, 128, 3)
+    inputs = torch.autograd.Variable(torch.randn(10, 22, 256))
+    out = model(inputs)
+    print(out.shape)

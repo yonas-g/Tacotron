@@ -15,3 +15,9 @@ class BatchNorm1d(nn.Module):
     def forward(self, inputs):
         out = self.bn(inputs.transpose(1, 2).contiguous())
         return out.transpose(1, 2)
+
+if __name__ == "__main__":
+    model = BatchNorm1d(256)
+    inputs = torch.autograd.Variable(torch.randn(10, 22, 256))
+    out = model(inputs)
+    print(out.shape)

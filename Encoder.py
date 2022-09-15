@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from modules.PreNet import PreNet
+from PreNet import PreNet
 from CBHG import CBHG
 
 from Hyperparameters import Hyperparameters as hp
@@ -25,3 +25,9 @@ class Encoder(nn.Module):
         outputs, hidden = self.cbhg(inputs, prev_hidden) # outputs [N, T, E]
 
         return outputs, hidden
+
+if __name__ == "__main__":
+    model = Encoder()
+    inputs = torch.autograd.Variable(torch.randn(10, 22, hp.E))
+    out, _ = model(inputs)
+    print(out.shape)
