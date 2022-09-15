@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-# from modules.Conv1d import Conv1d
+from Conv1d import Conv1d
 from Conv1dBank import Conv1dBank
 from BatchNorm1d import BatchNorm1d
 from MaxPool1d import MaxPool1d
@@ -26,10 +26,10 @@ class CBHG(nn.Module):
         )
 
         self.projection = nn.Sequential(
-            nn.Conv1d(in_channels=hp.K * hp.E // 2, out_channels=hp.E // 2, kernel_size=3),  # [N, T, E//2]
+            Conv1d(in_channels=hp.K * hp.E // 2, out_channels=hp.E // 2, kernel_size=3),  # [N, T, E//2]
             BatchNorm1d(num_features=hp.E // 2),
             nn.ReLU(),
-            nn.Conv1d(in_channels=hp.E // 2, out_channels=hp.E // 2, kernel_size=3), # [N, T, E//2]
+            Conv1d(in_channels=hp.E // 2, out_channels=hp.E // 2, kernel_size=3), # [N, T, E//2]
             BatchNorm1d(num_features=hp.E // 2)
         )
 
@@ -41,11 +41,8 @@ class CBHG(nn.Module):
     def forward(self, inputs, prev_hidden=None): # input from prenet
         
         outputs = self.conv1d_bank(inputs)
-        print("out", outputs.shape)
 
-        # outputs = torch.transpose(outputs, 1, 2)
         outputs = self.projection(outputs)
-        print("out----", outputs.shape)
 
         outputs = outputs + inputs # residual
 
@@ -60,17 +57,7 @@ class CBHG(nn.Module):
         return outputs, hidden
 
 if __name__ == "__main__":
-    # model = CBHG().to(hp.device)
-    # inputs = torch.randn(10, 22, 128).to(hp.device)
-    # out, _ = model(inputs)
-    # print(out.shape)
-
-    projection = nn.Sequential(
-            nn.Conv1d(in_channels=hp.K * hp.E // 2, out_channels=hp.E // 2, kernel_size=3),  # [N, T, E//2]
-            # BatchNorm1d(num_features=hp.E // 2),
-            # nn.ReLU(),
-            # nn.Conv1d(in_channels=hp.E // 2, out_channels=hp.E // 2, kernel_size=3), # [N, T, E//2]
-            # BatchNorm1d(num_features=hp.E // 2)
-        )
-    
-    print(projection(torch.randn(10, 2048, 22)).shape)
+    model = CBHG().to(hp.device)
+    inputs = torch.randn(64, 159, 128).to(hp.device)
+    out, _ = model(inputs)
+    print(out.shape)
