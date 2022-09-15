@@ -27,7 +27,12 @@ class Encoder(nn.Module):
         return outputs, hidden
 
 if __name__ == "__main__":
-    model = Encoder()
-    inputs = torch.autograd.Variable(torch.randn(10, 22, hp.E))
+
+    from torchsummaryX import summary
+
+    model = Encoder().to(hp.device)
+    inputs = torch.randn(10, 22, hp.E).to(hp.device)
     out, _ = model(inputs)
     print(out.shape)
+
+    summary(model, inputs)

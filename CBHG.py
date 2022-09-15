@@ -33,8 +33,10 @@ class CBHG(nn.Module):
             BatchNorm1d(num_features=hp.E // 2)
         )
 
-        highways = [Highway(in_features=hp.E // 2, out_features=hp.E // 2) for i in range(hp.num_highways)]
-        self.highways = nn.ModuleList(highways)
+        self.highways = nn.Sequential()
+        for i in range(hp.num_highways):
+            self.highways.append(Highway(in_features=hp.E // 2, out_features=hp.E // 2))
+            self.highways.append(nn.ReLU())
 
         self.gru = nn.GRU(input_size=hp.E // 2, hidden_size=hp.E // 2, num_layers=2, bidirectional=True, batch_first=True)
     
@@ -47,9 +49,7 @@ class CBHG(nn.Module):
         outputs = outputs + inputs # residual
 
         # highway
-        for layer in self.highways:
-            outputs = layer(outputs)
-            outputs = F.relu(outputs)  # [N, T, E//2]
+        self.highways(outputs)
         
         self.gru.flatten_parameters()
         outputs, hidden = self.gru(outputs, prev_hidden)  # outputs [N, T, E]
@@ -57,7 +57,12 @@ class CBHG(nn.Module):
         return outputs, hidden
 
 if __name__ == "__main__":
+    
+    from torchsummaryX import summary
+
     model = CBHG().to(hp.device)
     inputs = torch.randn(64, 159, 128).to(hp.device)
     out, _ = model(inputs)
     print(out.shape)
+
+    summary(model, inputs)
