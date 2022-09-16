@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from PreNet import PreNet
-from CBHG import CBHG
+from EncoderCBHG import CBHG
 
 from Hyperparameters import Hyperparameters as hp
 

@@ -84,13 +84,34 @@ def text_normalize(text):
     text = re.sub("[ ]+", " ", text)
     return text
 
+def get_eval_data(text, wav_path):
+    '''
+    get data for eval
+    --------------
+    input:
+        text --- pinyin format sequence
+    output:
+        text --- [1, T_x]
+        mel ---  [1, 1, n_mels]
+    '''
+    text = text_normalize(text) + 'E'
+    text = [hp.char2idx[c] for c in text]
+    text = torch.Tensor(text).type(torch.LongTensor)  # [T_x]
+    text = text.unsqueeze(0)  # [1, T_x]
+    mel = torch.zeros(1, 1, hp.n_mels)  # GO frame [1, 1, n_mels]
+
+    _, ref_mels, _ = load_spectrograms(wav_path)
+    ref_mels = torch.from_numpy(ref_mels).unsqueeze(0)
+
+    return text, mel, ref_mels
+
 
 if __name__ == '__main__':
     dataset = TacotronDataset()
     loader = DataLoader(dataset=dataset, batch_size=8, collate_fn=TacotronDataset.collate_fn)
 
     for batch in loader:
-        print(batch["text"][0])
+        print(batch["text"][0], batch["text"][0].shape)
         print(batch['mel'].size())
         print(batch['mag'].size())
         break

@@ -15,12 +15,13 @@ class Hyperparameters():
     # device = 'cpu'
 
     lr = 0.001
+    weight_decay = 5e-6 # default torch is 1e-2
     batch_size = 64 # 16 # !!!
     num_epochs = 100  # !!!
     eval_size = 1
     save_per_epoch = 1
     log_per_batch = 20
-    log_dir = './log/train{}'
+    log_dir = './log/train_{}'
 
     model_path = None
     optimizer_path = None

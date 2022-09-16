@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
     model = CBHG().to(hp.device)
     inputs = torch.randn(64, 159, 128).to(hp.device)
-    out, _ = model(inputs)
-    print(out.shape)
+    out, hidden = model(inputs)
+    print(out.shape, hidden.shape)
 
-    summary(model, inputs)
+    # summary(model, inputs)

@@ -132,3 +132,7 @@ def load_spectrograms(fpath):
     mel = np.pad(mel, [[0, num_paddings], [0, 0]], mode="constant")
     mag = np.pad(mag, [[0, num_paddings], [0, 0]], mode="constant")
     return fname, mel.reshape((-1, hp.n_mels * hp.r)), mag
+
+def log(f, message):
+    print(message)
+    f.write(message + '\n')
