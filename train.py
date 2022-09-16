@@ -68,7 +68,10 @@ def train(log_dir=0, dataset_size=None, start_epoch = 0):
         
         model.train()
 
-        for i, batch in enumerate(train_loader):
+        for i, batch in enumerate(train_loader):.
+
+            step += 1
+            global_step += 1
 
             texts = batch['text'].to(device)
             mels = batch['mel'].to(device)
