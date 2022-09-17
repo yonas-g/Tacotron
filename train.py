@@ -50,6 +50,8 @@ def train(log_dir=0, dataset_size=None, start_epoch = 0):
     criterion = TacotronLoss()
     optimizer = optim.AdamW(model.parameters(), lr=hp.lr, weight_decay=hp.weight_decay)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=(len(train_loader)*hp.num_epochs))
+
+    scaler = torch.cuda.amp.GradScaler()
     
     if start_epoch != 0:
         opt_path = os.path.join(log_dir, 'state_opt', 'epoch{}.pt'.format(start_epoch))
@@ -83,13 +85,19 @@ def train(log_dir=0, dataset_size=None, start_epoch = 0):
             mels_input = mels_input[:, :, -hp.n_mels:]  # get last frame
             ref_mels = mels[:, 1:, :]
 
-            mels_hat, mags_hat, _ = model(texts, mels_input, ref_mels)
+            with torch.cuda.amp.autocast():
 
-            mel_loss, mag_loss = criterion(mels[:, 1:, :], mels_hat, mags, mags_hat)
-            loss = mel_loss + mag_loss
-            loss.backward()
+                mels_hat, mags_hat, _ = model(texts, mels_input, ref_mels)
+
+                mel_loss, mag_loss = criterion(mels[:, 1:, :], mels_hat, mags, mags_hat)
+                loss = mel_loss + mag_loss
+            
+            # loss.backward()
+            scaler.scale(loss).backward()
+            scaler.unscale_(optimizer)
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.)  # clip gradients
-            optimizer.step()
+            scaler.step(optimizer)
+            scaler.update()
             scheduler.step()
 
             if (i + 1) % hp.log_per_batch == 0:
@@ -114,9 +122,10 @@ def train(log_dir=0, dataset_size=None, start_epoch = 0):
     f.close()
 
 
-def eval(epoch, log_dir, f, model, optimizer):
+def eval(epoch, log_dir, f, model, optimizer, scaler):
     torch.save(model.state_dict(), os.path.join(log_dir, 'state/epoch{}.pt'.format(epoch)))
     torch.save(optimizer.state_dict(), os.path.join(log_dir, 'state_opt/epoch{}.pt'.format(epoch)))
+    torch.save(scaler.state_dict(), os.path.join(log_dir, 'scaler_opt/epoch{}.pt'.format(epoch)))
     log(f, 'save model, optimizer in epoch{}'.format(epoch))
 
     model.eval()
@@ -160,6 +169,8 @@ def init_log_dir(log_dir):
         os.mkdir(os.path.join(log_dir, 'wav'))
     if not os.path.exists(os.path.join(log_dir, 'state_opt')):
         os.mkdir(os.path.join(log_dir, 'state_opt'))
+    if not os.path.exists(os.path.join(log_dir, 'scaler_opt')):
+        os.mkdir(os.path.join(log_dir, 'scaler_opt'))
     if not os.path.exists(os.path.join(log_dir, 'attn')):
         os.mkdir(os.path.join(log_dir, 'attn'))
     if not os.path.exists(os.path.join(log_dir, 'test_wav')):
